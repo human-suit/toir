@@ -2,8 +2,26 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import type { INestApplication } from '@nestjs/common';
+import type { OpenAPIObject } from '@nestjs/swagger';
+
+async function bootstrap(): Promise<void> {
+  const app: INestApplication = await NestFactory.create(AppModule);
+
+  app.enableCors();
+
+  const config = new DocumentBuilder()
+    .setTitle('TOIR API')
+    .setDescription('Maintenance system API')
+    .setVersion('1.0')
+    .build();
+
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
+
+  SwaggerModule.setup('api', app, document);
+
   await app.listen(3000);
 }
-bootstrap();
+
+void bootstrap();

@@ -1,23 +1,61 @@
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
+import { getDMMF } from '@prisma/internals';
 
 const schemaPath = path.resolve('prisma/schema.prisma');
 const MODULES_DIR = path.resolve('src/modules');
 
-function getModels(schema: string): string[] {
-  const regex = /model\s+(\w+)\s+\{/g;
+type PrismaField = {
+  name: string;
+  type: string;
+  kind: string;
+  isRequired: boolean;
+  isList: boolean;
+  isId: boolean;
+};
 
-  const models: string[] = [];
-  let match;
+type PrismaModel = {
+  name: string;
+  fields: PrismaField[];
+};
 
-  while ((match = regex.exec(schema)) !== null) {
-    models.push(match[1]);
-  }
-
-  return models;
+function lowerFirst(str: string): string {
+  return str.charAt(0).toLowerCase() + str.slice(1);
 }
 
-function createModule(name: string) {
+async function getModels(): Promise<PrismaModel[]> {
+  const schema = fs.readFileSync(schemaPath, 'utf8');
+
+  const dmmf = await getDMMF({
+    datamodel: schema,
+  });
+
+  return dmmf.datamodel.models as unknown as PrismaModel[];
+}
+
+function generateMeta(models: PrismaModel[]) {
+  const meta = models.map((model) => ({
+    name: model.name,
+    fields: model.fields.map((f) => ({
+      name: f.name,
+      type: String(f.type),
+      isRequired: f.isRequired,
+      isList: f.isList,
+      isRelation: f.kind === 'object',
+    })),
+  }));
+
+  const outDir = path.resolve('generated');
+  fs.mkdirSync(outDir, { recursive: true });
+
+  fs.writeFileSync(
+    path.join(outDir, 'meta.json'),
+    JSON.stringify(meta, null, 2),
+  );
+}
+
+function createModule(model: PrismaModel) {
+  const name = model.name;
   const moduleName = name.toLowerCase();
   const modulePath = path.join(MODULES_DIR, moduleName);
 
@@ -26,6 +64,72 @@ function createModule(name: string) {
   generateModule(name, moduleName, modulePath);
   generateController(name, moduleName, modulePath);
   generateService(name, moduleName, modulePath);
+  generateDTO(model, moduleName, modulePath);
+}
+
+function generateDTO(
+  model: PrismaModel,
+  moduleName: string,
+  modulePath: string,
+) {
+  const name = model.name;
+
+  const dtoDir = path.join(modulePath, 'dto');
+  fs.mkdirSync(dtoDir, { recursive: true });
+
+  const createDtoPath = path.join(dtoDir, `create-${moduleName}.dto.ts`);
+  const updateDtoPath = path.join(dtoDir, `update-${moduleName}.dto.ts`);
+
+  const scalarFields = model.fields.filter(
+    (f) =>
+      f.kind === 'scalar' &&
+      !f.isId &&
+      f.name !== 'createdAt' &&
+      f.name !== 'updatedAt',
+  );
+
+  const createFields = scalarFields
+    .map((f) => {
+      const optional = f.isRequired ? '' : '?';
+      return `  ${f.name}${optional}: ${mapType(f.type)};`;
+    })
+    .join('\n');
+
+  const updateFields = scalarFields
+    .map((f) => {
+      return `  ${f.name}?: ${mapType(f.type)};`;
+    })
+    .join('\n');
+
+  const createContent = `export class Create${name}Dto {
+${createFields}
+}
+`;
+
+  const updateContent = `export class Update${name}Dto {
+${updateFields}
+}
+`;
+
+  fs.writeFileSync(createDtoPath, createContent);
+  fs.writeFileSync(updateDtoPath, updateContent);
+}
+
+function mapType(type: string) {
+  switch (type) {
+    case 'Int':
+      return 'number';
+    case 'String':
+      return 'string';
+    case 'DateTime':
+      return 'Date';
+    case 'Boolean':
+      return 'boolean';
+    case 'Float':
+      return 'number';
+    default:
+      return 'any';
+  }
 }
 
 function generateModule(name: string, moduleName: string, modulePath: string) {
@@ -34,8 +138,10 @@ function generateModule(name: string, moduleName: string, modulePath: string) {
   const content = `import { Module } from '@nestjs/common';
 import { ${name}Controller } from './${moduleName}.controller';
 import { ${name}Service } from './${moduleName}.service';
+import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
+  imports: [PrismaModule],
   controllers: [${name}Controller],
   providers: [${name}Service],
 })
@@ -43,7 +149,6 @@ export class ${name}Module {}
 `;
 
   fs.writeFileSync(filePath, content);
-  console.log('Created module:', filePath);
 }
 
 function generateController(
@@ -53,12 +158,21 @@ function generateController(
 ) {
   const filePath = path.join(modulePath, `${moduleName}.controller.ts`);
 
-  const content = `import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+  const content = `import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { ${name}Service } from './${moduleName}.service';
+import { Create${name}Dto } from './dto/create-${moduleName}.dto';
+import { Update${name}Dto } from './dto/update-${moduleName}.dto';
 
 @Controller('${moduleName}')
 export class ${name}Controller {
-
   constructor(private readonly service: ${name}Service) {}
 
   @Get()
@@ -72,65 +186,117 @@ export class ${name}Controller {
   }
 
   @Post()
-  create(@Body() data: unknown) {
-    return this.service.create(data);
+  create(@Body() dto: Create${name}Dto) {
+    return this.service.create(dto);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: Update${name}Dto) {
+    return this.service.update(Number(id), dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.service.remove(Number(id));
   }
 }
 `;
 
   fs.writeFileSync(filePath, content);
-  console.log('Created controller:', filePath);
 }
 
-function generateService(name: string, moduleName: string, modulePath: string) {
+function generateService(
+  model: string,
+  moduleName: string,
+  modulePath: string,
+) {
+  const modelLower = lowerFirst(model);
   const filePath = path.join(modulePath, `${moduleName}.service.ts`);
 
   const content = `import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Prisma, ${model} } from '@prisma/client';
+import { Create${model}Dto } from './dto/create-${moduleName}.dto';
+import { Update${model}Dto } from './dto/update-${moduleName}.dto';
 
 @Injectable()
-export class ${name}Service {
-
+export class ${model}Service {
   constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    return this.prisma.${moduleName}.findMany();
+  findAll(): Promise<${model}[]> {
+    return this.prisma.${modelLower}.findMany();
   }
 
-  findOne(id: number) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    return this.prisma.${moduleName}.findUnique({
+  findOne(id: number): Promise<${model} | null> {
+    return this.prisma.${modelLower}.findUnique({
       where: { id },
     });
   }
 
-  create(data: unknown) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    return this.prisma.${moduleName}.create({
-      data: data as any,
+  create(dto: Create${model}Dto): Promise<${model}> {
+    return this.prisma.${modelLower}.create({
+      data: dto as unknown as Prisma.${model}CreateInput,
     });
   }
 
+  update(id: number, dto: Update${model}Dto): Promise<${model}> {
+    return this.prisma.${modelLower}.update({
+      where: { id },
+      data: dto as unknown as Prisma.${model}UpdateInput,
+    });
+  }
+
+  remove(id: number): Promise<${model}> {
+    return this.prisma.${modelLower}.delete({
+      where: { id },
+    });
+  }
 }
 `;
 
   fs.writeFileSync(filePath, content);
-  console.log('Created service:', filePath);
 }
 
-function main() {
-  const schema = fs.readFileSync(schemaPath, 'utf-8');
-  const models = getModels(schema);
+function generateAppModule(models: PrismaModel[]) {
+  const filePath = path.resolve('src/app.module.ts');
 
-  const model = models.find((m) => m === 'Equipment');
+  const imports = models.map((m) => `${m.name}Module`).join(', ');
 
-  if (!model) {
-    console.log('Model Equipment not found');
-    return;
+  const importLines = models
+    .map(
+      (m) =>
+        `import { ${m.name}Module } from './modules/${m.name.toLowerCase()}/${m.name.toLowerCase()}.module';`,
+    )
+    .join('\n');
+
+  const content = `import { Module } from '@nestjs/common';
+import { PrismaModule } from './prisma/prisma.module';
+${importLines}
+
+@Module({
+  imports: [PrismaModule, ${imports}],
+})
+export class AppModule {}
+`;
+
+  fs.writeFileSync(filePath, content);
+}
+
+async function main() {
+  const models = await getModels();
+
+  console.log(
+    'Models:',
+    models.map((m) => m.name),
+  );
+
+  generateMeta(models);
+
+  for (const model of models) {
+    createModule(model);
   }
 
-  createModule(model);
+  generateAppModule(models);
 }
 
 main();

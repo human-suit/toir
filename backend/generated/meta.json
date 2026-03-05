@@ -1,0 +1,136 @@
+[
+  {
+    "name": "User",
+    "fields": [
+      {
+        "name": "id",
+        "type": "Int",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "email",
+        "type": "String",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "isRequired": false,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "role",
+        "type": "String",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      }
+    ]
+  },
+  {
+    "name": "Equipment",
+    "fields": [
+      {
+        "name": "id",
+        "type": "Int",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "serial",
+        "type": "String",
+        "isRequired": false,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "workOrders",
+        "type": "WorkOrder",
+        "isRequired": true,
+        "isList": true,
+        "isRelation": true
+      }
+    ]
+  },
+  {
+    "name": "WorkOrder",
+    "fields": [
+      {
+        "name": "id",
+        "type": "Int",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "title",
+        "type": "String",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "isRequired": false,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "equipmentId",
+        "type": "Int",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": false
+      },
+      {
+        "name": "equipment",
+        "type": "Equipment",
+        "isRequired": true,
+        "isList": false,
+        "isRelation": true
+      }
+    ]
+  }
+]

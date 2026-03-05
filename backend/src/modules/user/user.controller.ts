@@ -7,13 +7,13 @@ import {
   Param,
   Body,
 } from '@nestjs/common';
-import { EquipmentService } from './equipment.service';
-import { CreateEquipmentDto } from './dto/create-equipment.dto';
-import { UpdateEquipmentDto } from './dto/update-equipment.dto';
+import { UserService } from './user.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
-@Controller('equipment')
-export class EquipmentController {
-  constructor(private readonly service: EquipmentService) {}
+@Controller('user')
+export class UserController {
+  constructor(private readonly service: UserService) {}
 
   @Get()
   findAll() {
@@ -26,12 +26,12 @@ export class EquipmentController {
   }
 
   @Post()
-  create(@Body() dto: CreateEquipmentDto) {
+  create(@Body() dto: CreateUserDto) {
     return this.service.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateEquipmentDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.service.update(Number(id), dto);
   }
 
