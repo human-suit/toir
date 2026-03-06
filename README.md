@@ -1,3 +1,37 @@
+Что сейчас уже работает
+
+У тебя сейчас автоматически работает:
+
+📦 Prisma модели
+
+⚙️ генератор NestJS модулей
+
+🧠 DTO
+
+🎮 Controllers
+
+🔧 Services
+
+🗄 Prisma запросы
+
+🖥 React Admin
+
+📊 таблицы с данными
+
+То есть схема такая:
+
+Prisma schema
+      ↓
+meta generator
+      ↓
+NestJS module generator
+      ↓
+REST API
+      ↓
+React Admin resources
+      ↓
+UI таблицы
+
 # TOiR System Generator
 
 Система генерации **backend и frontend** для системы **ТОиР (Техническое обслуживание и ремонт оборудования)** на основе описания сущностей в **Prisma Schema**.
