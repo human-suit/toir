@@ -9,8 +9,13 @@ import type { OpenAPIObject } from '@nestjs/swagger';
 async function bootstrap(): Promise<void> {
   const app: INestApplication = await NestFactory.create(AppModule);
 
-  app.enableCors();
+  // CORS для React Admin
+  app.enableCors({
+    origin: '*',
+    exposedHeaders: ['Content-Range'],
+  });
 
+  // Swagger
   const config = new DocumentBuilder()
     .setTitle('TOIR API')
     .setDescription('Maintenance system API')
@@ -21,6 +26,7 @@ async function bootstrap(): Promise<void> {
 
   SwaggerModule.setup('api', app, document);
 
+  // запуск сервера
   await app.listen(3000);
 }
 

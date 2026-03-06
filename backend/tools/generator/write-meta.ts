@@ -11,5 +11,11 @@ export function writeMeta(models: ModelMeta[]) {
 
   const file = path.join(outDir, 'meta.json');
 
-  fs.writeFileSync(file, JSON.stringify(models, null, 2));
+  const meta = {
+    models,
+  };
+
+  fs.writeFileSync(file, JSON.stringify(meta, null, 2));
+
+  console.log('meta.json generated');
 }
