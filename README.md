@@ -1,3 +1,5 @@
+<img width="1872" height="757" alt="image" src="https://github.com/user-attachments/assets/188a9769-32e1-4a18-bb46-14b52d9a582e" />
+
 Что сейчас уже работает
 
 У тебя сейчас автоматически работает:
