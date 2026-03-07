@@ -1,16 +1,23 @@
 services:
   db:
-    image: postgres:17
-    container_name: toir-postgres
-    restart: always
+    image: postgres:15
     environment:
-      POSTGRES_DB: toir
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 515340
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: toir
     ports:
-      - "5433:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - "5432:5432"
 
-volumes:
-  pgdata:
+  backend:
+    build: ../backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ../frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
