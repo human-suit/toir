@@ -15,8 +15,16 @@ type ModelMeta = {
   fields: FieldMeta[];
 };
 
-const META_PATH = path.resolve('../backend/generated/meta.json');
-const OUTPUT_DIR = path.resolve('../frontend/src/admin/generated');
+// ПРАВИЛЬНЫЕ ПУТИ ДЛЯ DOCKER
+const META_PATH = path.join(process.cwd(), 'generated', 'meta.json');
+const OUTPUT_DIR = path.join(
+  process.cwd(),
+  '..',
+  'frontend',
+  'src',
+  'admin',
+  'generated',
+);
 
 function lower(str: string): string {
   return str.charAt(0).toLowerCase() + str.slice(1);
@@ -54,6 +62,10 @@ ${fields}
 function main(): void {
   ensureDir();
 
+  if (!fs.existsSync(META_PATH)) {
+    throw new Error('meta.json not found: ' + META_PATH);
+  }
+
   const raw = fs.readFileSync(META_PATH, 'utf8');
 
   const meta = JSON.parse(raw) as { models: ModelMeta[] };
@@ -61,6 +73,8 @@ function main(): void {
   for (const model of meta.models) {
     generateList(model);
   }
+
+  console.log('Admin lists generated');
 }
 
 main();

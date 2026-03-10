@@ -3,19 +3,24 @@ import path from 'path';
 import { ModelMeta } from './model-meta';
 
 export function writeMeta(models: ModelMeta[]) {
-  const outDir = path.resolve(process.cwd(), 'generated');
+  const outDir = path.join(process.cwd(), 'generated');
 
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }
 
-  const file = path.join(outDir, 'meta.json');
+  const filePath = path.join(outDir, 'meta.json');
 
   const meta = {
     models,
   };
 
-  fs.writeFileSync(file, JSON.stringify(meta, null, 2));
-
-  console.log('meta.json generated');
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(meta, null, 2), 'utf8');
+    console.log('meta.json generated at:', filePath);
+  } catch (err) {
+    console.error('Failed to write meta.json');
+    console.error(err);
+    process.exit(1);
+  }
 }

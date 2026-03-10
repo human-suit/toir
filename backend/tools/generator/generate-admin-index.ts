@@ -1,55 +1,58 @@
 import fs from 'fs';
 import path from 'path';
+import { ModelMeta } from './model-meta';
 
-type ModelMeta = {
-  name: string;
-};
-
-const META_PATH = path.resolve('generated/meta.json');
-const OUTPUT_DIR = path.resolve('../frontend/src/admin/generated');
-
-function lower(str: string): string {
-  return str.charAt(0).toLowerCase() + str.slice(1);
+function lower(name: string): string {
+  return name.charAt(0).toLowerCase() + name.slice(1);
 }
 
-function generateIndex(models: ModelMeta[]): void {
-  const imports = models
-    .map((m) => {
-      const name = m.name;
-      const lowerName = lower(name);
+function generateResources() {
+  const metaPath = path.resolve('generated/meta.json');
 
-      return `import { ${name}List } from "./${lowerName}.list"`;
-    })
-    .join('\n');
-
-  const resources = models
-    .map((m) => {
-      const name = m.name;
-      const lowerName = lower(name);
-
-      return `  {
-    name: "${lowerName}",
-    list: ${name}List
-  }`;
-    })
-    .join(',\n');
-
-  const content = `${imports}
-
-export const adminResources = [
-${resources}
-]
-`;
-
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'index.ts'), content);
-}
-
-function main(): void {
-  const raw = fs.readFileSync(META_PATH, 'utf8');
+  const raw = fs.readFileSync(metaPath, 'utf8');
 
   const meta = JSON.parse(raw) as { models: ModelMeta[] };
 
-  generateIndex(meta.models);
+  const models: ModelMeta[] = meta.models;
+
+  const imports = models
+    .map((m) => {
+      return `
+import { ${m.name}List } from "./${lower(m.name)}.list";
+import { ${m.name}Create, ${m.name}Edit, ${m.name}Show } from "./crud/${m.name}Crud";
+`;
+    })
+    .join('');
+
+  const resources = models
+    .map((m) => {
+      const name = lower(m.name);
+
+      return `{
+  name: "${name}",
+  list: ${m.name}List,
+  create: ${m.name}Create,
+  edit: ${m.name}Edit,
+  show: ${m.name}Show
+}`;
+    })
+    .join(',\n');
+
+  const content = `
+${imports}
+
+export const adminResources = [
+${resources}
+];
+`;
+
+  const outputDir = path.resolve('../frontend/src/admin/generated');
+
+  fs.mkdirSync(outputDir, { recursive: true });
+
+  const outputFile = path.join(outputDir, 'resources.ts');
+
+  fs.writeFileSync(outputFile, content);
 }
 
-main();
+generateResources();

@@ -21,6 +21,7 @@ function main() {
   // react admin
   run('npx ts-node tools/generator/generate-admin.ts');
   run('npx ts-node tools/generator/generate-admin-lists.ts');
+  run('npx ts-node tools/generator/generate-admin-crud.ts');
   run('npx ts-node tools/generator/generate-admin-index.ts');
 }
 
