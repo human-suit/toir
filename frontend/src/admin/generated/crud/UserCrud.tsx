@@ -1,4 +1,3 @@
-
 import {
 Create,
 Edit,
@@ -8,9 +7,11 @@ SimpleShowLayout,
 TextInput,
 NumberInput,
 DateInput,
+BooleanInput,
 TextField,
 NumberField,
-DateField
+DateField,
+BooleanField
 } from "react-admin";
 
 export const UserCreate = () => (
@@ -19,7 +20,6 @@ export const UserCreate = () => (
         <TextInput source="email" />
         <TextInput source="name" />
         <TextInput source="role" />
-        <DateInput source="createdAt" />
     </SimpleForm>
   </Create>
 );
@@ -30,7 +30,6 @@ export const UserEdit = () => (
         <TextInput source="email" />
         <TextInput source="name" />
         <TextInput source="role" />
-        <DateInput source="createdAt" />
     </SimpleForm>
   </Edit>
 );

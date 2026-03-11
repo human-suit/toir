@@ -2,6 +2,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { readMeta } from './read-meta';
 
+import { execSync } from "child_process";
+
+console.log("⚙️ Ensuring Prisma client...");
+
+execSync("npx prisma generate", { stdio: "inherit" });
+
 const MODULES_DIR = path.resolve('src/modules');
 
 type PrismaField = {
@@ -25,6 +31,29 @@ function getRelations(model: PrismaModel): string[] {
   return model.fields
     .filter((f) => f.isRelation && !f.isList)
     .map((f) => f.name);
+}
+
+function getScalarFields(model: PrismaModel): PrismaField[] {
+  return model.fields.filter((f) => {
+    if (f.isRelation) return false;
+    if (f.name === 'id') return false;
+    if (f.name === 'createdAt') return false;
+    if (f.name === 'updatedAt') return false;
+    return true;
+  });
+}
+
+function getRelationIdFields(model: PrismaModel): PrismaField[] {
+  return model.fields.filter((f) => {
+    if (f.isRelation) return false;
+    if (!f.name.endsWith('Id')) return false;
+
+    const relationName = f.name.replace(/Id$/, '');
+
+    return model.fields.some(
+      (rel) => rel.isRelation && lowerFirst(rel.name) === relationName,
+    );
+  });
 }
 
 function createModule(model: PrismaModel) {
@@ -53,13 +82,7 @@ function generateDTO(
   const createDtoPath = path.join(dtoDir, `create-${moduleName}.dto.ts`);
   const updateDtoPath = path.join(dtoDir, `update-${moduleName}.dto.ts`);
 
-  const dtoFields = model.fields.filter((f) => {
-    if (f.isRelation) return false;
-    if (f.name === 'id') return false;
-    if (f.name === 'createdAt') return false;
-    if (f.name === 'updatedAt') return false;
-    return true;
-  });
+  const dtoFields = getScalarFields(model);
 
   const createFields = dtoFields
     .map((f) => {
@@ -131,6 +154,7 @@ function generateController(
   Get,
   Post,
   Patch,
+  Put,
   Delete,
   Param,
   Body,
@@ -187,11 +211,9 @@ export class ${name}Controller {
     return this.service.create(dto);
   }
 
+  @Put(':id')
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() dto: Update${name}Dto,
-  ) {
+  update(@Param('id') id: string, @Body() dto: Update${name}Dto) {
     return this.service.update(Number(id), dto);
   }
 
@@ -215,6 +237,25 @@ function generateService(
   const filePath = path.join(modulePath, `${moduleName}.service.ts`);
 
   const relations = getRelations(model);
+  const relationIdFields = getRelationIdFields(model);
+  const scalarFields = getScalarFields(model);
+
+  const scalarMappings = scalarFields
+    .filter((f) => !f.name.endsWith('Id'))
+    .map(
+      (f) => `...(dto.${f.name} !== undefined && { ${f.name}: dto.${f.name} })`,
+    )
+    .join(',');
+
+  const relationMappings = relationIdFields
+    .map((f) => {
+      const relationName = f.name.replace(/Id$/, '');
+      return `...(dto.${f.name} !== undefined && {
+        ${relationName}: { connect: { id: dto.${f.name} } }
+      })`;
+    })
+    .join(',');
+
   const relationsArray = JSON.stringify(relations);
 
   const content = `import { Injectable } from '@nestjs/common';
@@ -316,15 +357,27 @@ export class ${modelName}Service {
   }
 
   create(dto: Create${modelName}Dto): Promise<${modelName}> {
+
+    const data = {
+      ${scalarMappings},
+      ${relationMappings}
+    };
+
     return this.prisma.${modelLower}.create({
-      data: dto as unknown as Prisma.${modelName}CreateInput,
+      data: data as Prisma.${modelName}CreateInput
     });
   }
 
   update(id: number, dto: Update${modelName}Dto): Promise<${modelName}> {
+
+    const data = {
+      ${scalarMappings},
+      ${relationMappings}
+    };
+
     return this.prisma.${modelLower}.update({
       where: { id },
-      data: dto as unknown as Prisma.${modelName}UpdateInput,
+      data: data as Prisma.${modelName}UpdateInput
     });
   }
 

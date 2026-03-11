@@ -1,4 +1,3 @@
-
 import {
 Create,
 Edit,
@@ -8,9 +7,11 @@ SimpleShowLayout,
 TextInput,
 NumberInput,
 DateInput,
+BooleanInput,
 TextField,
 NumberField,
-DateField
+DateField,
+BooleanField
 } from "react-admin";
 
 export const WorkOrderCreate = () => (
@@ -19,7 +20,6 @@ export const WorkOrderCreate = () => (
         <TextInput source="title" />
         <TextInput source="description" />
         <TextInput source="status" />
-        <DateInput source="createdAt" />
         <NumberInput source="equipmentId" />
     </SimpleForm>
   </Create>
@@ -31,7 +31,6 @@ export const WorkOrderEdit = () => (
         <TextInput source="title" />
         <TextInput source="description" />
         <TextInput source="status" />
-        <DateInput source="createdAt" />
         <NumberInput source="equipmentId" />
     </SimpleForm>
   </Edit>

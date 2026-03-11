@@ -97,15 +97,27 @@ export class UserService {
   }
 
   create(dto: CreateUserDto): Promise<User> {
+
+    const data = {
+      ...(dto.email !== undefined && { email: dto.email }),...(dto.name !== undefined && { name: dto.name }),...(dto.role !== undefined && { role: dto.role }),
+      
+    };
+
     return this.prisma.user.create({
-      data: dto as unknown as Prisma.UserCreateInput,
+      data: data as Prisma.UserCreateInput
     });
   }
 
   update(id: number, dto: UpdateUserDto): Promise<User> {
+
+    const data = {
+      ...(dto.email !== undefined && { email: dto.email }),...(dto.name !== undefined && { name: dto.name }),...(dto.role !== undefined && { role: dto.role }),
+      
+    };
+
     return this.prisma.user.update({
       where: { id },
-      data: dto as unknown as Prisma.UserUpdateInput,
+      data: data as Prisma.UserUpdateInput
     });
   }
 

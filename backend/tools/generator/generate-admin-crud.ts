@@ -4,15 +4,54 @@ import { ModelMeta } from './model-meta';
 
 const ROOT = process.cwd();
 
+function inputForField(f: any): string {
+  if (f.type === 'Int') {
+    return `<NumberInput source="${f.name}" />`;
+  }
+
+  if (f.type === 'Float') {
+    return `<NumberInput source="${f.name}" />`;
+  }
+
+  if (f.type === 'Boolean') {
+    return `<BooleanInput source="${f.name}" />`;
+  }
+
+  if (f.type === 'DateTime') {
+    return `<DateInput source="${f.name}" />`;
+  }
+
+  return `<TextInput source="${f.name}" />`;
+}
+
+function fieldForType(f: any): string {
+  if (f.type === 'Int') {
+    return `<NumberField source="${f.name}" />`;
+  }
+
+  if (f.type === 'Float') {
+    return `<NumberField source="${f.name}" />`;
+  }
+
+  if (f.type === 'Boolean') {
+    return `<BooleanField source="${f.name}" />`;
+  }
+
+  if (f.type === 'DateTime') {
+    return `<DateField source="${f.name}" />`;
+  }
+
+  return `<TextField source="${f.name}" />`;
+}
+
 export function generateAdminCrud(models: ModelMeta[]): void {
   const outDir = path.join(
-    ROOT,
+    process.cwd(),
     '..',
     'frontend',
     'src',
     'admin',
-    'generated',
-    'crud',
+    'generated'
   );
 
   fs.mkdirSync(outDir, { recursive: true });
@@ -20,37 +59,23 @@ export function generateAdminCrud(models: ModelMeta[]): void {
   for (const model of models) {
     const name: string = model.name;
 
-    const inputs: string = model.fields
-      .filter((f) => !f.isRelation && f.name !== 'id')
-      .map((f) => {
-        if (f.type === 'Int') {
-          return `<NumberInput source="${f.name}" />`;
-        }
-
-        if (f.type === 'DateTime') {
-          return `<DateInput source="${f.name}" />`;
-        }
-
-        return `<TextInput source="${f.name}" />`;
-      })
+    const inputFields = model.fields
+      .filter(
+        (f) =>
+          !f.isRelation &&
+          f.name !== 'id' &&
+          f.name !== 'createdAt' &&
+          f.name !== 'updatedAt',
+      )
+      .map((f) => inputForField(f))
       .join('\n        ');
 
-    const fields: string = model.fields
+    const showFields = model.fields
       .filter((f) => !f.isRelation)
-      .map((f) => {
-        if (f.type === 'Int') {
-          return `<NumberField source="${f.name}" />`;
-        }
-
-        if (f.type === 'DateTime') {
-          return `<DateField source="${f.name}" />`;
-        }
-
-        return `<TextField source="${f.name}" />`;
-      })
+      .map((f) => fieldForType(f))
       .join('\n        ');
 
-    const fileContent: string = `
+    const fileContent = `
 import {
 Create,
 Edit,
@@ -60,15 +85,17 @@ SimpleShowLayout,
 TextInput,
 NumberInput,
 DateInput,
+BooleanInput,
 TextField,
 NumberField,
-DateField
+DateField,
+BooleanField
 } from "react-admin";
 
 export const ${name}Create = () => (
   <Create>
     <SimpleForm>
-        ${inputs}
+        ${inputFields}
     </SimpleForm>
   </Create>
 );
@@ -76,7 +103,7 @@ export const ${name}Create = () => (
 export const ${name}Edit = () => (
   <Edit>
     <SimpleForm>
-        ${inputs}
+        ${inputFields}
     </SimpleForm>
   </Edit>
 );
@@ -84,15 +111,15 @@ export const ${name}Edit = () => (
 export const ${name}Show = () => (
   <Show>
     <SimpleShowLayout>
-        ${fields}
+        ${showFields}
     </SimpleShowLayout>
   </Show>
 );
 `;
 
-    const filePath: string = path.join(outDir, `${name}Crud.tsx`);
+    const filePath = path.join(outDir, 'crud', `${name}Crud.tsx`);
 
-    fs.writeFileSync(filePath, fileContent);
+    fs.writeFileSync(filePath, fileContent.trim());
   }
 
   console.log('Admin CRUD generated');

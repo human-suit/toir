@@ -1,4 +1,3 @@
-
 import {
 Create,
 Edit,
@@ -8,9 +7,11 @@ SimpleShowLayout,
 TextInput,
 NumberInput,
 DateInput,
+BooleanInput,
 TextField,
 NumberField,
-DateField
+DateField,
+BooleanField
 } from "react-admin";
 
 export const EquipmentCreate = () => (
@@ -18,7 +19,6 @@ export const EquipmentCreate = () => (
     <SimpleForm>
         <TextInput source="name" />
         <TextInput source="serial" />
-        <DateInput source="createdAt" />
     </SimpleForm>
   </Create>
 );
@@ -28,7 +28,6 @@ export const EquipmentEdit = () => (
     <SimpleForm>
         <TextInput source="name" />
         <TextInput source="serial" />
-        <DateInput source="createdAt" />
     </SimpleForm>
   </Edit>
 );

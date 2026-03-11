@@ -43,7 +43,14 @@ ${resources}
 ];
 `;
 
-  const outputDir = path.resolve('../frontend/src/admin/generated');
+  const outputDir = path.join(
+        process.cwd(),
+        '..',
+        'frontend',
+        'src',
+        'admin',
+        'generated'
+      );
 
   fs.mkdirSync(outputDir, { recursive: true });
 

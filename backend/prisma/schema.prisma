@@ -33,3 +33,23 @@ model WorkOrder {
   equipmentId Int
   equipment   Equipment @relation(fields: [equipmentId], references: [id])
 }
+
+model TestAuto {
+  id   Int    @id @default(autoincrement())
+  name String
+}
+
+model TestAuto2 {
+  id   Int    @id @default(autoincrement())
+  name String
+}
+
+model TestAuto3 {
+  id   Int    @id @default(autoincrement())
+  name String
+}
+
+model TestAuto4 {
+  id   Int    @id @default(autoincrement())
+  name String
+}

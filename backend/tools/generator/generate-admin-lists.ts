@@ -15,16 +15,17 @@ type ModelMeta = {
   fields: FieldMeta[];
 };
 
-// ПРАВИЛЬНЫЕ ПУТИ ДЛЯ DOCKER
 const META_PATH = path.join(process.cwd(), 'generated', 'meta.json');
+
+
 const OUTPUT_DIR = path.join(
-  process.cwd(),
-  '..',
-  'frontend',
-  'src',
-  'admin',
-  'generated',
-);
+      process.cwd(),
+      '..',
+      'frontend',
+      'src',
+      'admin',
+      'generated'
+    );
 
 function lower(str: string): string {
   return str.charAt(0).toLowerCase() + str.slice(1);
@@ -36,21 +37,47 @@ function ensureDir(): void {
   }
 }
 
+function mapField(field: FieldMeta): string {
+  if (field.type === 'Int') {
+    return `<NumberField source="${field.name}" />`;
+  }
+
+  if (field.type === 'DateTime') {
+    return `<DateField source="${field.name}" />`;
+  }
+
+  return `<TextField source="${field.name}" />`;
+}
+
 function generateList(model: ModelMeta): void {
   const modelName = model.name;
+
   const fileName = `${lower(modelName)}.list.tsx`;
 
   const fields = model.fields
     .filter((f) => !f.isList)
-    .map((f) => `        <TextField source="${f.name}" />`)
+    .map((f) => `        ${mapField(f)}`)
     .join('\n');
 
-  const content = `import { List, Datagrid, TextField } from "react-admin";
+  const content = `import {
+List,
+Datagrid,
+TextField,
+NumberField,
+DateField,
+EditButton,
+ShowButton,
+DeleteButton
+} from "react-admin";
 
 export const ${modelName}List = () => (
   <List>
-    <Datagrid>
+    <Datagrid rowClick="edit">
 ${fields}
+
+        <EditButton />
+        <ShowButton />
+        <DeleteButton />
     </Datagrid>
   </List>
 );

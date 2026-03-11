@@ -97,15 +97,31 @@ export class WorkOrderService {
   }
 
   create(dto: CreateWorkOrderDto): Promise<WorkOrder> {
+
+    const data = {
+      ...(dto.title !== undefined && { title: dto.title }),...(dto.description !== undefined && { description: dto.description }),...(dto.status !== undefined && { status: dto.status }),
+      ...(dto.equipmentId !== undefined && {
+        equipment: { connect: { id: dto.equipmentId } }
+      })
+    };
+
     return this.prisma.workOrder.create({
-      data: dto as unknown as Prisma.WorkOrderCreateInput,
+      data: data as Prisma.WorkOrderCreateInput
     });
   }
 
   update(id: number, dto: UpdateWorkOrderDto): Promise<WorkOrder> {
+
+    const data = {
+      ...(dto.title !== undefined && { title: dto.title }),...(dto.description !== undefined && { description: dto.description }),...(dto.status !== undefined && { status: dto.status }),
+      ...(dto.equipmentId !== undefined && {
+        equipment: { connect: { id: dto.equipmentId } }
+      })
+    };
+
     return this.prisma.workOrder.update({
       where: { id },
-      data: dto as unknown as Prisma.WorkOrderUpdateInput,
+      data: data as Prisma.WorkOrderUpdateInput
     });
   }
 

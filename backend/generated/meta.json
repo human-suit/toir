@@ -150,6 +150,90 @@
           "relationTarget": "Equipment"
         }
       ]
+    },
+    {
+      "name": "TestAuto",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Int",
+          "isRequired": true,
+          "isList": false,
+          "isRelation": false,
+          "relationTarget": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "isRequired": true,
+          "isList": false,
+          "isRelation": false,
+          "relationTarget": null
+        }
+      ]
+    },
+    {
+      "name": "TestAuto2",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Int",
+          "isRequired": true,
+          "isList": false,
+          "isRelation": false,
+          "relationTarget": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "isRequired": true,
+          "isList": false,
+          "isRelation": false,
+          "relationTarget": null
+        }
+      ]
+    },
+    {
+      "name": "TestAuto3",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Int",
+          "isRequired": true,
+          "isList": false,
+          "isRelation": false,
+          "relationTarget": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "isRequired": true,
+          "isList": false,
+          "isRelation": false,
+          "relationTarget": null
+        }
+      ]
+    },
+    {
+      "name": "TestAuto4",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Int",
+          "isRequired": true,
+          "isList": false,
+          "isRelation": false,
+          "relationTarget": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "isRequired": true,
+          "isList": false,
+          "isRelation": false,
+          "relationTarget": null
+        }
+      ]
     }
   ]
 }

@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Put,
   Delete,
   Param,
   Body,
@@ -59,11 +60,9 @@ export class EquipmentController {
     return this.service.create(dto);
   }
 
+  @Put(':id')
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() dto: UpdateEquipmentDto,
-  ) {
+  update(@Param('id') id: string, @Body() dto: UpdateEquipmentDto) {
     return this.service.update(Number(id), dto);
   }
 

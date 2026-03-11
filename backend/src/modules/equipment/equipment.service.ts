@@ -97,15 +97,27 @@ export class EquipmentService {
   }
 
   create(dto: CreateEquipmentDto): Promise<Equipment> {
+
+    const data = {
+      ...(dto.name !== undefined && { name: dto.name }),...(dto.serial !== undefined && { serial: dto.serial }),
+      
+    };
+
     return this.prisma.equipment.create({
-      data: dto as unknown as Prisma.EquipmentCreateInput,
+      data: data as Prisma.EquipmentCreateInput
     });
   }
 
   update(id: number, dto: UpdateEquipmentDto): Promise<Equipment> {
+
+    const data = {
+      ...(dto.name !== undefined && { name: dto.name }),...(dto.serial !== undefined && { serial: dto.serial }),
+      
+    };
+
     return this.prisma.equipment.update({
       where: { id },
-      data: dto as unknown as Prisma.EquipmentUpdateInput,
+      data: data as Prisma.EquipmentUpdateInput
     });
   }
 
